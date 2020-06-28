@@ -360,12 +360,12 @@ function coverClassPropDeclarator(path) {
     this.insertStatementCounter(path.get('value'));
 }
 
+// makeBlock guarantees a path is a BlockStatement or null. If it's not already a BlockStatement, 
+// it will be wrapped in one. If path does not exist, such as IfStatement's consequent, it will
+// stay null.
 function makeBlock(path) {
     const T = this.types;
-    if (!path.node) {
-        path.replaceWith(T.blockStatement([]));
-    }
-    if (!path.isBlockStatement()) {
+    if (path.node && !path.isBlockStatement()) {
         path.replaceWith(T.blockStatement([path.node]));
         path.node.loc = path.node.body[0].loc;
         path.node.body[0].leadingComments = path.node.leadingComments;
@@ -419,12 +419,14 @@ function coverIfBranches(path) {
     if (ignoreIf) {
         this.setAttr(n.consequent, 'skip-all', true);
     } else {
-        this.insertBranchCounter(path.get('consequent'), branch, n.loc);
+        this.insertBranchCounter(path.get('consequent'), branch);
     }
-    if (ignoreElse) {
-        this.setAttr(n.alternate, 'skip-all', true);
-    } else {
-        this.insertBranchCounter(path.get('alternate'), branch, n.loc);
+    if (n.alternate) {
+        if (ignoreElse) {
+            this.setAttr(n.alternate, 'skip-all', true);
+        } else {
+            this.insertBranchCounter(path.get('alternate'), branch);
+        }
     }
 }
 
